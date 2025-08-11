@@ -21,4 +21,4 @@ app.get('/random', async (req, res) => {
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`API on http://localhost:${port}`));
+app.listen(port, '0.0.0.0', () => console.log(`API on http://localhost:${port}`));
