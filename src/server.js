@@ -1,12 +1,33 @@
 import 'dotenv/config';
 import express from 'express';
 import { getCategories, pickProvider } from './registry.js';
+import cors from 'cors'
 
 const app = express();
 
+const allowed = [
+  'http://localhost:5173/',      // Vite dev
+  'http://127.0.0.1:5173',
+  'https://tuapp.vercel.app'    // tu front en prod (ajustá el dominio)
+]
+
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin || allowed.includes(origin)) return cb(null, true)
+    return cb(new Error('CORS: origin no permitido'))
+  },
+  methods: ['GET', 'OPTIONS'],
+  allowedHeaders: ['Accept', 'Content-Type'],
+  maxAge: 86400
+}))
+
 app.get('/health', (_,res) => res.json({ ok: true }));
 
-app.get('/categories', (_,res) => res.json({ categories: getCategories() }));
+app.get('/categories', (req, res) => {
+  res.json({
+    categories: getCategories().filter(Boolean) // <- acá filtrás los null o vacíos
+  })
+})
 
 app.get('/random', async (req, res) => {
   try {
