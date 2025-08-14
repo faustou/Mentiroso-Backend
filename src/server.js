@@ -6,20 +6,29 @@ import cors from 'cors'
 const app = express();
 
 const allowed = [
-  'http://localhost:5173/',      // Vite dev
+  'http://localhost:5173',      // Vite dev
   'http://127.0.0.1:5173',
   'https://tuapp.vercel.app'    // tu front en prod (ajustá el dominio)
 ]
 
 app.use(cors({
   origin(origin, cb) {
-    if (!origin || allowed.includes(origin)) return cb(null, true)
-    return cb(new Error('CORS: origin no permitido'))
+    // Permitir requests SIN Origin (curl, navegador abriendo la URL, health checks)
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.has(origin)) return cb(null, true);
+    return cb(new Error('CORS: origin no permitido'));
   },
   methods: ['GET', 'OPTIONS'],
   allowedHeaders: ['Accept', 'Content-Type'],
   maxAge: 86400
-}))
+}));
+
+app.use((req, _res, next) => { 
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Origin:', req.headers.origin);
+  }
+  next();
+});
 
 app.get('/health', (_,res) => res.json({ ok: true }));
 
