@@ -5,11 +5,11 @@ import cors from 'cors'
 
 const app = express();
 
-const allowed = [
-  'http://localhost:5173',      // Vite dev
+const ALLOWED_ORIGINS = new Set([
+  'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://tuapp.vercel.app'    // tu front en prod (ajustá el dominio)
-]
+  'https://tu-front-en-vercel.vercel.app' // cambia por tu dominio real
+]);
 
 app.use(cors({
   origin(origin, cb) {
