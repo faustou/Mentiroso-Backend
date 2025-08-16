@@ -1,20 +1,36 @@
-import { getJson } from '../utils/http.js';
+// src/providers/famosos_curated_ar.js
+import { getSeenSet, markSeen } from '../utils/seen.js';
 
 export const category = 'famosos';
-export const name = 'tmdb_people';
-export const weight = 1;
+export const name = 'famosos_curated_ar';
+export const weight = 4; // ↑ prioridad alta sobre Wikidata/TMDb
 
-export async function getRandom() {
-  const apiKey = process.env.TMDB_API_KEY;
-  const page = 1 + Math.floor(Math.random() * 5);
-  const url = `https://api.themoviedb.org/3/person/popular?language=es-ES&page=${page}&api_key=${apiKey}`;
-  const data = await getJson(url);
-  const arr = data.results || [];
-  if (!arr.length) throw new Error('No people found');
-  const pick = arr[Math.floor(Math.random() * arr.length)];
-  return {
-    text: pick.name,
-    category,
-    meta: { known_for: (pick.known_for_department || '').toLowerCase() }
-  };
+// Lista hiper conocida (AR + global). Podés editar libremente.
+const LIST = [
+  // Deportes
+  'Lionel Messi','Diego Maradona','Juan Martín del Potro','Manu Ginóbili','Gabriela Sabatini',
+  // Música (Latam/Global)
+  'Shakira','Bad Bunny','Karol G','Daddy Yankee','Ricky Martin','Luis Miguel',
+  'Michael Jackson','Madonna','Adele','Ed Sheeran','Taylor Swift',
+  // Cine/TV
+  'Ricardo Darín','Guillermo Francella','Meryl Streep','Brad Pitt','Angelina Jolie','Leonardo DiCaprio',
+  'Will Smith','Keanu Reeves','Dwayne Johnson',
+  // Política/Historia (conocidos masivamente)
+  'Papa Francisco','Eva Perón','Nelson Mandela','Barack Obama',
+  // Internet/Cultura pop
+  'Messi','Cristiano Ronaldo' // repetidos intencionalmente para aumentar frecuencia
+];
+
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+export async function getRandom({ session } = {}) {
+  const seen = getSeenSet(session);
+  const keyOf = (t) => `famosos:${t.toLowerCase()}`;
+
+  const pool = LIST.filter(t => !seen.has(keyOf(t)));
+  const text = (pool.length ? pick(pool) : pick(LIST));
+
+  if (session) markSeen(session, keyOf(text));
+
+  return { text, category, source: 'curated', meta: {} };
 }
